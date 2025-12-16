@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
-import { getUsers, type User } from '@/data/demo.users'
+import { users, type User } from '@/data/demo.users'
 import { VirtualTable } from '@/components/VirtualTable'
 
 export const Route = createFileRoute('/demo/start/virtual-table')({
   component: RouteComponent,
-  loader: async () => await getUsers(),
 })
 
 const columns: ColumnDef<User, unknown>[] = [
@@ -37,7 +36,6 @@ const columns: ColumnDef<User, unknown>[] = [
 ]
 
 function RouteComponent() {
-  const users = Route.useLoaderData()
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
 

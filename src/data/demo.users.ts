@@ -1,5 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
-
 export type User = {
   id: number;
   firstName: string;
@@ -12,30 +10,17 @@ export type User = {
   notes: string;
 };
 
-function generateRandomNotes(): string {
-  const sentences = [
-    "Excellent team player.",
-    "Consistently meets deadlines.",
-    "Strong technical skills.",
-    "Great communication abilities.",
-    "Proactive problem solver.",
-    "Shows leadership potential.",
-    "Needs improvement in time management.",
-    "Highly motivated and dedicated.",
-    "Works well under pressure.",
-    "Creative and innovative thinker.",
-  ];
-
-  // Random number of sentences (1-5) for variable height
-  const count = Math.floor(Math.random() * 5) + 1;
-  const selected: string[] = [];
-  for (let i = 0; i < count; i++) {
-    selected.push(sentences[Math.floor(Math.random() * sentences.length)]);
-  }
-  return selected.join(" ");
+// Seeded random number generator for deterministic data
+function seededRandom(seed: number) {
+  return function () {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
 }
 
 function generateUsers(count: number): User[] {
+  const random = seededRandom(12345);
+
   const firstNames = [
     "John",
     "Jane",
@@ -68,24 +53,40 @@ function generateUsers(count: number): User[] {
     "Finance",
     "Support",
   ];
+  const sentences = [
+    "Excellent team player.",
+    "Consistently meets deadlines.",
+    "Strong technical skills.",
+    "Great communication abilities.",
+    "Proactive problem solver.",
+    "Shows leadership potential.",
+    "Needs improvement in time management.",
+    "Highly motivated and dedicated.",
+    "Works well under pressure.",
+    "Creative and innovative thinker.",
+  ];
+
+  const generateNotes = () => {
+    const noteCount = Math.floor(random() * 5) + 1;
+    const selected: string[] = [];
+    for (let i = 0; i < noteCount; i++) {
+      selected.push(sentences[Math.floor(random() * sentences.length)]);
+    }
+    return selected.join(" ");
+  };
 
   return Array.from({ length: count }, (_, i) => ({
     id: i + 1,
-    firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
-    lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
+    firstName: firstNames[Math.floor(random() * firstNames.length)],
+    lastName: lastNames[Math.floor(random() * lastNames.length)],
     email: `user${i + 1}@example.com`,
-    age: Math.floor(Math.random() * 40) + 22,
-    department: departments[Math.floor(Math.random() * departments.length)],
-    salary: Math.floor(Math.random() * 100000) + 40000,
-    hireDate: new Date(
-      Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000,
-    )
-      .toISOString()
-      .split("T")[0],
-    notes: generateRandomNotes(),
+    age: Math.floor(random() * 40) + 22,
+    department: departments[Math.floor(random() * departments.length)],
+    salary: Math.floor(random() * 100000) + 40000,
+    hireDate: `202${Math.floor(random() * 5)}-${String(Math.floor(random() * 12) + 1).padStart(2, "0")}-${String(Math.floor(random() * 28) + 1).padStart(2, "0")}`,
+    notes: generateNotes(),
   }));
 }
 
-export const getUsers = createServerFn({
-  method: "GET",
-}).handler(async () => generateUsers(10000));
+// Static data generated at build time
+export const users: User[] = generateUsers(10000);
