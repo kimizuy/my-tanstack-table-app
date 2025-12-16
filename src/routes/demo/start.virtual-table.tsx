@@ -40,8 +40,8 @@ function RouteComponent() {
   const [globalFilter, setGlobalFilter] = useState('')
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
         <h1 className="text-3xl font-bold text-cyan-400 mb-6">
           Virtual Table Demo
         </h1>
@@ -59,13 +59,15 @@ function RouteComponent() {
           />
         </div>
 
-        <VirtualTable
-          data={users}
-          columns={columns}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          globalFilter={globalFilter}
-        />
+        <div className="flex-1 min-h-0">
+          <VirtualTable
+            data={users}
+            columns={columns}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            globalFilter={globalFilter}
+          />
+        </div>
       </div>
     </div>
   )

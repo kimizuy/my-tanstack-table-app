@@ -78,9 +78,9 @@ export function VirtualTable<T>({
   const virtualRows = virtualizer.getVirtualItems()
 
   return (
-    <div className="rounded-lg border border-slate-700 overflow-hidden">
+    <div className="h-full flex flex-col rounded-lg border border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="flex bg-slate-800 border-b border-slate-700">
+      <div className="flex shrink-0 bg-slate-800 border-b border-slate-700">
         {table.getHeaderGroups().map((headerGroup) =>
           headerGroup.headers.map((header) => (
             <div
@@ -99,8 +99,8 @@ export function VirtualTable<T>({
         )}
       </div>
 
-      {/* Body - 固定高さコンテナが仮想化の鍵 */}
-      <div ref={parentRef} className="h-[600px] overflow-auto">
+      {/* Body - 計算可能な高さが仮想化の鍵 */}
+      <div ref={parentRef} className="flex-1 min-h-0 overflow-auto">
         <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index]
@@ -214,9 +214,19 @@ style={{
 
 ### 仮想化の必須要件
 
-1. **固定高さのスクロールコンテナ**: `h-[600px] overflow-auto`
+1. **計算可能な高さのスクロールコンテナ**: `h-screen`, `h-[600px]`, または親から継承した `h-full`
 2. **相対位置の内部コンテナ**: `position: relative` + 全体の高さを設定
 3. **絶対位置の行**: `position: absolute` + `transform: translateY()`
+
+**高さのチェーン例（flexboxを使用）:**
+```
+h-screen (ルート)
+  → flex-1 min-h-0 (コンテナ)
+    → h-full flex flex-col (VirtualTable外枠)
+      → flex-1 min-h-0 overflow-auto (スクロールコンテナ)
+```
+
+`min-h-0` はflexアイテムのデフォルト `min-height: auto` を上書きし、縮小を可能にするために必要。
 
 ## Tech Stack
 

@@ -53,9 +53,9 @@ export function VirtualTable<T>({
   const virtualRows = virtualizer.getVirtualItems()
 
   return (
-    <div className="rounded-lg border border-slate-700 overflow-hidden">
+    <div className="h-full flex flex-col rounded-lg border border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="flex bg-slate-800 border-b border-slate-700">
+      <div className="flex shrink-0 bg-slate-800 border-b border-slate-700">
         {table.getHeaderGroups().map((headerGroup) =>
           headerGroup.headers.map((header) => (
             <div
@@ -80,7 +80,7 @@ export function VirtualTable<T>({
       {/* Body */}
       <div
         ref={parentRef}
-        className="h-[600px] overflow-auto"
+        className="flex-1 min-h-0 overflow-auto"
       >
         <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
           {virtualRows.map((virtualRow) => {
