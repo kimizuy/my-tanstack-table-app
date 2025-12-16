@@ -1,290 +1,225 @@
-Welcome to your new TanStack app! 
+# TanStack Virtual Table Demo
 
-# Getting Started
+TanStack Table + TanStack Virtual を使用した、大量データ（10,000行）でも高パフォーマンスなテーブルの実装例。
 
-To run this application:
+## Demo
 
-```bash
-npm install
-npm run start
-```
+https://my-tanstack-table-app.kimizuy.workers.dev/demo/start/virtual-table
 
-# Building For Production
+## Features
 
-To build this application for production:
+- **行の仮想化**: 10,000行でもスムーズにスクロール
+- **動的な行の高さ**: コンテンツに応じて行の高さが自動調整
+- **ソート機能**: ヘッダークリックでソート
+- **グローバルフィルタ**: 全カラムを対象とした検索
 
-```bash
-npm run build
-```
+## Implementation
 
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+### 必要なパッケージ
 
 ```bash
-npm run test
+npm install @tanstack/react-table @tanstack/react-virtual
 ```
 
-## Styling
+### VirtualTable コンポーネント
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-
-
-
-## Routing
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
+`src/components/VirtualTable.tsx`
 
 ```tsx
-import { Link } from "@tanstack/react-router";
+import { useRef } from 'react'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+} from '@tanstack/react-table'
+import { useVirtualizer } from '@tanstack/react-virtual'
+
+type VirtualTableProps<T> = {
+  data: T[]
+  columns: ColumnDef<T, unknown>[]
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
+  globalFilter?: string
+}
+
+export function VirtualTable<T>({
+  data,
+  columns,
+  sorting = [],
+  onSortingChange,
+  globalFilter,
+}: VirtualTableProps<T>) {
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: onSortingChange as (updater: unknown) => void,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  })
+
+  const { rows } = table.getRowModel()
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60,  // 推定行高さ
+    overscan: 5,             // 追加レンダリング行数
+    measureElement: (element) => element.getBoundingClientRect().height,
+  })
+
+  const virtualRows = virtualizer.getVirtualItems()
+
+  return (
+    <div className="rounded-lg border border-slate-700 overflow-hidden">
+      {/* Header */}
+      <div className="flex bg-slate-800 border-b border-slate-700">
+        {table.getHeaderGroups().map((headerGroup) =>
+          headerGroup.headers.map((header) => (
+            <div
+              key={header.id}
+              onClick={header.column.getToggleSortingHandler()}
+              className="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-slate-700 flex-shrink-0"
+              style={{
+                width: header.column.getSize(),
+                flexGrow: header.column.getSize() === 150 ? 1 : 0,
+              }}
+            >
+              {flexRender(header.column.columnDef.header, header.getContext())}
+              {{ asc: ' ↑', desc: ' ↓' }[header.column.getIsSorted() as string] ?? null}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Body - 固定高さコンテナが仮想化の鍵 */}
+      <div ref={parentRef} className="h-[600px] overflow-auto">
+        <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+          {virtualRows.map((virtualRow) => {
+            const row = rows[virtualRow.index]
+            return (
+              <div
+                key={row.id}
+                data-index={virtualRow.index}
+                ref={(node) => virtualizer.measureElement(node)}
+                className="flex hover:bg-slate-700/50 border-b border-slate-700/50"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <div
+                    key={cell.id}
+                    className="px-4 py-3 text-sm flex-shrink-0"
+                    style={{
+                      width: cell.column.getSize(),
+                      flexGrow: cell.column.getSize() === 150 ? 1 : 0,
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 ```
 
-Then anywhere in your JSX you can use it like so:
+### 使用例
 
 ```tsx
-<Link to="/about">About</Link>
-```
+import { useState } from 'react'
+import { type ColumnDef, type SortingState } from '@tanstack/react-table'
+import { VirtualTable } from '@/components/VirtualTable'
 
-This will create a link that will navigate to the `/about` route.
+type User = {
+  id: number
+  firstName: string
+  lastName: string
+  notes: string
+}
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+const columns: ColumnDef<User, unknown>[] = [
+  { accessorKey: 'id', header: 'ID', size: 70 },
+  { accessorKey: 'firstName', header: 'First Name', size: 120 },
+  { accessorKey: 'lastName', header: 'Last Name', size: 120 },
+  { accessorKey: 'notes', header: 'Notes' },  // size未指定 = flexGrowで伸縮
+]
 
-### Using A Layout
+function MyTable({ data }: { data: User[] }) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = useState('')
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
+  return (
     <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
+      <input
+        type="text"
+        placeholder="Search..."
+        value={globalFilter}
+        onChange={(e) => setGlobalFilter(e.target.value)}
+      />
+      <VirtualTable
+        data={data}
+        columns={columns}
+        sorting={sorting}
+        onSortingChange={setSorting}
+        globalFilter={globalFilter}
+      />
     </>
-  ),
+  )
+}
+```
+
+## Key Points
+
+### 動的な行の高さ
+
+`measureElement` を使用して実際のDOM要素の高さを計測:
+
+```tsx
+const virtualizer = useVirtualizer({
+  // ...
+  measureElement: (element) => element.getBoundingClientRect().height,
 })
+
+// 行のref設定で自動計測
+<div ref={(node) => virtualizer.measureElement(node)}>
 ```
 
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
+### カラム幅の整列
 
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
+`<table>` ではなく flex レイアウトを使用。絶対位置指定された仮想行でもカラム幅が揃う:
 
 ```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
+style={{
+  width: cell.column.getSize(),
+  flexGrow: cell.column.getSize() === 150 ? 1 : 0,  // デフォルトサイズ(150)なら伸縮
+}}
 ```
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+### 仮想化の必須要件
 
-### React-Query
+1. **固定高さのスクロールコンテナ**: `h-[600px] overflow-auto`
+2. **相対位置の内部コンテナ**: `position: relative` + 全体の高さを設定
+3. **絶対位置の行**: `position: absolute` + `transform: translateY()`
 
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
+## Tech Stack
 
-First add your dependencies:
-
-```bash
-npm install @tanstack/react-query @tanstack/react-query-devtools
-```
-
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// ...
-
-const queryClient = new QueryClient();
-
-// ...
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
-```
-
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
-  });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export default App;
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
-
-```bash
-npm install @tanstack/store
-```
-
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
-
-export default App;
-```
-
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
-
-Let's check this out by doubling the count using derived state.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
-
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
-
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
-
-export default App;
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+- [TanStack Table](https://tanstack.com/table) - Headless table library
+- [TanStack Virtual](https://tanstack.com/virtual) - Row virtualization
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
