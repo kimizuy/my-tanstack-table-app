@@ -1,0 +1,10 @@
+name = "my-tanstack-table-app"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+main = "dist/server/index.js"
+
+[assets]
+directory = "dist/client"
+
+[observability]
+enabled = true
