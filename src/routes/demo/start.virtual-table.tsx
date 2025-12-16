@@ -24,30 +24,15 @@ const columns: ColumnDef<User, unknown>[] = [
     header: 'Last Name',
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    accessorKey: 'age',
-    header: 'Age',
-    size: 80,
-  },
-  {
     accessorKey: 'department',
     header: 'Department',
   },
   {
-    accessorKey: 'salary',
-    header: 'Salary',
-    cell: ({ getValue }) =>
-      new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(getValue() as number),
-  },
-  {
-    accessorKey: 'hireDate',
-    header: 'Hire Date',
+    accessorKey: 'notes',
+    header: 'Notes',
+    cell: ({ getValue }) => (
+      <div className="max-w-md">{getValue() as string}</div>
+    ),
   },
 ]
 

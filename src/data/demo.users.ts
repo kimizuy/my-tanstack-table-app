@@ -9,6 +9,30 @@ export type User = {
   department: string
   salary: number
   hireDate: string
+  notes: string
+}
+
+function generateRandomNotes(): string {
+  const sentences = [
+    'Excellent team player.',
+    'Consistently meets deadlines.',
+    'Strong technical skills.',
+    'Great communication abilities.',
+    'Proactive problem solver.',
+    'Shows leadership potential.',
+    'Needs improvement in time management.',
+    'Highly motivated and dedicated.',
+    'Works well under pressure.',
+    'Creative and innovative thinker.',
+  ]
+
+  // Random number of sentences (1-5) for variable height
+  const count = Math.floor(Math.random() * 5) + 1
+  const selected: string[] = []
+  for (let i = 0; i < count; i++) {
+    selected.push(sentences[Math.floor(Math.random() * sentences.length)])
+  }
+  return selected.join(' ')
 }
 
 function generateUsers(count: number): User[] {
@@ -56,6 +80,7 @@ function generateUsers(count: number): User[] {
     hireDate: new Date(Date.now() - Math.random() * 5 * 365 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0],
+    notes: generateRandomNotes(),
   }))
 }
 
