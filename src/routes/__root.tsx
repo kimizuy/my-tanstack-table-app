@@ -33,13 +33,13 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body className="h-full flex flex-col">
+      <body className="h-dvh grid grid-rows-[auto_1fr]">
         <Header />
-        <main className="flex-1 min-h-0">{children}</main>
+        <main className="min-h-0">{children}</main>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

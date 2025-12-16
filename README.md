@@ -214,19 +214,27 @@ style={{
 
 ### 仮想化の必須要件
 
-1. **計算可能な高さのスクロールコンテナ**: `h-screen`, `h-[600px]`, または親から継承した `h-full`
+1. **計算可能な高さのスクロールコンテナ**: `h-dvh`, `h-[600px]`, または親から継承した `h-full`
 2. **相対位置の内部コンテナ**: `position: relative` + 全体の高さを設定
 3. **絶対位置の行**: `position: absolute` + `transform: translateY()`
 
-**高さのチェーン例（flexboxを使用）:**
-```
-h-screen (ルート)
-  → flex-1 min-h-0 (コンテナ)
-    → h-full flex flex-col (VirtualTable外枠)
-      → flex-1 min-h-0 overflow-auto (スクロールコンテナ)
+**高さの設定例（CSS Grid + dvh）:**
+```tsx
+// ルートレイアウト
+<body className="h-dvh grid grid-rows-[auto_1fr]">
+  <Header />
+  <main className="min-h-0">{children}</main>
+</body>
+
+// ページ
+<div className="h-full">
+  <VirtualTable />  {/* h-full flex flex-col */}
+</div>
 ```
 
-`min-h-0` はflexアイテムのデフォルト `min-height: auto` を上書きし、縮小を可能にするために必要。
+- `h-dvh`: Dynamic Viewport Height（モバイルのアドレスバーも考慮）
+- `grid-rows-[auto_1fr]`: ヘッダーは自動、残りは1fr
+- `min-h-0`: グリッドアイテムの縮小を許可
 
 ## Tech Stack
 
