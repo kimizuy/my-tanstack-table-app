@@ -40,7 +40,7 @@ function RouteComponent() {
   const [globalFilter, setGlobalFilter] = useState('')
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="h-full flex flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
         <h1 className="text-3xl font-bold text-cyan-400 mb-6">
           Virtual Table Demo
