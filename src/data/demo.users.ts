@@ -86,4 +86,4 @@ function generateUsers(count: number): User[] {
 
 export const getUsers = createServerFn({
   method: 'GET',
-}).handler(async () => generateUsers(10000))
+}).handler(async () => generateUsers(1000))

@@ -48,8 +48,7 @@ function RouteComponent() {
           Virtual Table Demo
         </h1>
         <p className="text-gray-400 mb-4">
-          Displaying {users.length.toLocaleString()} rows with row
-          virtualization
+          Displaying {users.length.toLocaleString()} rows with row virtualization
         </p>
 
         <div className="mb-4">
