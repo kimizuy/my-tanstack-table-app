@@ -58,7 +58,17 @@ export function VirtualTable<T>({
       className="h-[600px] overflow-auto rounded-lg border border-slate-700"
     >
       <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse table-fixed">
+          <colgroup>
+            {table.getAllColumns().map((column) => (
+              <col
+                key={column.id}
+                style={{
+                  width: column.getSize() !== 150 ? column.getSize() : undefined,
+                }}
+              />
+            ))}
+          </colgroup>
           <thead className="sticky top-0 bg-slate-800 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -101,7 +111,7 @@ export function VirtualTable<T>({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3 text-sm text-gray-300 border-b border-slate-700/50"
+                      className="px-4 py-3 text-sm text-gray-300 border-b border-slate-700/50 align-top"
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

@@ -13,26 +13,26 @@ const columns: ColumnDef<User, unknown>[] = [
   {
     accessorKey: 'id',
     header: 'ID',
-    size: 80,
+    size: 70,
   },
   {
     accessorKey: 'firstName',
     header: 'First Name',
+    size: 120,
   },
   {
     accessorKey: 'lastName',
     header: 'Last Name',
+    size: 120,
   },
   {
     accessorKey: 'department',
     header: 'Department',
+    size: 130,
   },
   {
     accessorKey: 'notes',
     header: 'Notes',
-    cell: ({ getValue }) => (
-      <div className="max-w-md">{getValue() as string}</div>
-    ),
   },
 ]
 
